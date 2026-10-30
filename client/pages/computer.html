@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chơi cờ vua với máy tính - Chess Online</title>
+    <link rel="stylesheet" href="/css/site.css?v=9.9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon-wrap">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <span>Chess Online</span>
+            </a>
+            <ul id="nav-links"></ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="game-container">
+            <!-- Khu vực bàn cờ -->
+            <div class="board-area">
+                <!-- Máy tính (ở trên) -->
+                <div class="player-card">
+                    <div class="player-info">
+                        <div class="player-avatar" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="player-details">
+                            <h4>Máy Tính (AI Engine)</h4>
+                            <div class="captured-pieces" id="black-captured-tray"></div>
+                        </div>
+                    </div>
+                    <span id="ai-level-badge" class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Minimax AI</span>
+                </div>
+
+                <!-- Bàn cờ chính -->
+                <div id="chessboard-mount" style="width: 100%; display: flex; justify-content: center;"></div>
+
+                <!-- Người chơi (ở dưới) -->
+                <div class="player-card active-turn">
+                    <div class="player-info">
+                        <div class="player-avatar" style="background: linear-gradient(135deg, #14532d 0%, #064e3b 100%); color: #86efac; border-color: rgba(129, 182, 76, 0.4);">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="player-details">
+                            <h4>Bạn (Kỳ thủ)</h4>
+                            <div class="captured-pieces" id="white-captured-tray"></div>
+                        </div>
+                    </div>
+                    <span id="game-status-text" style="font-size: 0.9rem; font-weight: 700; color: #86efac;">Đến lượt bạn</span>
+                </div>
+
+                <!-- Nút điều khiển nhanh -->
+                <div style="display: flex; justify-content: space-between; width: 100%; max-width: 620px; padding: 4px 6px;">
+                    <button class="btn btn-secondary btn-sm" id="flip-board-btn"><i class="fas fa-sync-alt"></i> Lật bàn cờ</button>
+                    <button class="btn btn-danger btn-sm" id="resign-btn"><i class="fas fa-flag"></i> Đầu hàng</button>
+                </div>
+
+                <!-- Thanh điều khiển Xem lại ván cờ (Replay Controls Bar) -->
+                <div id="replay-controls-bar" style="display: none; width: 100%; max-width: 620px; background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(129, 182, 76, 0.5); border-radius: var(--radius-sm); padding: 12px 16px; margin-top: 8px; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="badge badge-win" style="font-size: 0.78rem;"><i class="fas fa-history"></i> REPLAY</span>
+                            <span id="replay-status-text" style="font-size: 0.88rem; font-weight: 700; color: #86efac; font-family: monospace;">Trạng thái ban đầu</span>
+                        </div>
+                        <button class="btn btn-danger btn-sm" id="replay-exit-btn" title="Thoát chế độ xem lại"><i class="fas fa-times"></i> Đóng</button>
+                    </div>
+
+                    <!-- Slider timeline trong game đấu máy -->
+                    <div style="display: flex; align-items: center; gap: 8px; width: 100%; background: rgba(0,0,0,0.25); padding: 4px 10px; border-radius: 6px;">
+                        <span id="comp-replay-slider-curr" style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; font-family: monospace; min-width: 25px;">0</span>
+                        <input type="range" id="comp-replay-timeline-slider" min="0" max="0" value="0" style="flex: 1; accent-color: #81b64c; cursor: pointer; height: 6px;">
+                        <span id="comp-replay-slider-max" style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; font-family: monospace; min-width: 25px; text-align: right;">0</span>
+                    </div>
+
+                    <div style="display: flex; gap: 6px; justify-content: center; width: 100%; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-sm" id="replay-first-btn" title="Đầu ván (Home)"><i class="fas fa-step-backward"></i></button>
+                        <button class="btn btn-secondary btn-sm" id="replay-jump-back-10" title="Tua lùi 10 nước (-10s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">-10s</button>
+                        <button class="btn btn-secondary btn-sm" id="replay-jump-back-5" title="Tua lùi 5 nước (-5s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">-5s</button>
+                        <button class="btn btn-secondary btn-sm" id="replay-prev-btn" title="Nước trước (←)"><i class="fas fa-chevron-left"></i></button>
+                        <button class="btn btn-primary btn-sm" id="replay-play-btn" style="min-width: 85px;" title="Phát tự động (Space)"><i class="fas fa-play"></i> Phát</button>
+                        <button class="btn btn-secondary btn-sm" id="replay-next-btn" title="Nước kế (→)"><i class="fas fa-chevron-right"></i></button>
+                        <button class="btn btn-secondary btn-sm" id="replay-jump-fwd-5" title="Tua tới 5 nước (+5s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">+5s</button>
+                        <button class="btn btn-secondary btn-sm" id="replay-jump-fwd-10" title="Tua tới 10 nước (+10s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">+10s</button>
+                        <button class="btn btn-secondary btn-sm" id="replay-last-btn" title="Cuối ván (End)"><i class="fas fa-step-forward"></i></button>
+                    </div>
+
+                    <!-- Tốc độ phát -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 700;"><i class="fas fa-tachometer-alt"></i> Tốc độ:</span>
+                        <div class="comp-replay-speed-group" style="display: inline-flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; border: 1px solid rgba(255,255,255,0.08); gap: 2px;">
+                            <button type="button" class="comp-speed-btn" data-speed="0.5" style="padding: 2px 8px; font-size: 0.78rem; border-radius: 4px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: 700;">0.5x</button>
+                            <button type="button" class="comp-speed-btn active" data-speed="1.0" style="padding: 2px 8px; font-size: 0.78rem; border-radius: 4px; border: none; background: #81b64c; color: #fff; cursor: pointer; font-weight: 700;">1x</button>
+                            <button type="button" class="comp-speed-btn" data-speed="1.5" style="padding: 2px 8px; font-size: 0.78rem; border-radius: 4px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: 700;">1.5x</button>
+                            <button type="button" class="comp-speed-btn" data-speed="2.0" style="padding: 2px 8px; font-size: 0.78rem; border-radius: 4px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: 700;">2x</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng cài đặt & Nước đi bên phải -->
+            <div class="game-sidebar">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-target="tab-settings">
+                        <i class="fas fa-cog"></i> Cài đặt AI
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-moves">
+                        <i class="fas fa-list-ol"></i> Nước đi
+                    </button>
+                    <button class="sidebar-tab" data-target="tab-theme">
+                        <i class="fas fa-palette"></i> Bàn cờ
+                    </button>
+                </div>
+
+                <!-- Tab 1: Cài đặt trận đấu -->
+                <div class="tab-content active" id="tab-settings">
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div>
+                            <label style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">
+                                Chọn màu quân của bạn:
+                            </label>
+                            <div style="display: flex; gap: 12px;">
+                                <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; font-weight: 700;">
+                                    <input type="radio" name="player-color" value="w" checked> Trắng (Đi trước)
+                                </label>
+                                <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; font-weight: 700;">
+                                    <input type="radio" name="player-color" value="b"> Đen (Đi sau)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="ai-difficulty" style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">
+                                Mức độ AI:
+                            </label>
+                            <select id="ai-difficulty" class="form-control" style="padding: 12px;">
+                                <option value="easy">Dễ (Người mới tập chơi - Depth 1)</option>
+                                <option value="medium" selected>Trung bình (Chiến thuật cơ bản - Depth 2)</option>
+                                <option value="hard">Khó (Đánh giá sâu & Vị trí quân - Depth 3)</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary btn-block btn-lg" id="new-game-btn" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> Bắt đầu ván mới
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Lịch sử nước đi -->
+                <div class="tab-content" id="tab-moves">
+                    <div class="moves-panel">
+                        <div class="moves-table-container">
+                            <table class="moves-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Trắng</th>
+                                        <th>Đen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="moves-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Tùy biến giao diện bàn cờ -->
+                <div class="tab-content" id="tab-theme">
+                    <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 12px;">Chọn giao diện bàn cờ:</h4>
+                    <div class="theme-picker-grid">
+                        <div class="theme-card active" data-theme="tournament">
+                            <div class="theme-preview-box">
+                                <div style="background:#ebecd0;"></div><div style="background:#739552;"></div>
+                                <div style="background:#ebecd0;"></div><div style="background:#739552;"></div>
+                                <div style="background:#739552;"></div><div style="background:#ebecd0;"></div>
+                                <div style="background:#739552;"></div><div style="background:#ebecd0;"></div>
+                            </div>
+                            <span style="font-size:0.85rem; font-weight:700;">Giải Đấu (Xanh)</span>
+                        </div>
+                        <div class="theme-card" data-theme="wood">
+                            <div class="theme-preview-box">
+                                <div style="background:#f0d9b5;"></div><div style="background:#b58863;"></div>
+                                <div style="background:#f0d9b5;"></div><div style="background:#b58863;"></div>
+                                <div style="background:#b58863;"></div><div style="background:#f0d9b5;"></div>
+                                <div style="background:#b58863;"></div><div style="background:#f0d9b5;"></div>
+                            </div>
+                            <span style="font-size:0.85rem; font-weight:700;">Gỗ Cổ Điển</span>
+                        </div>
+                        <div class="theme-card" data-theme="cyber">
+                            <div class="theme-preview-box">
+                                <div style="background:#dee3e6;"></div><div style="background:#5b7b99;"></div>
+                                <div style="background:#dee3e6;"></div><div style="background:#5b7b99;"></div>
+                                <div style="background:#5b7b99;"></div><div style="background:#dee3e6;"></div>
+                                <div style="background:#5b7b99;"></div><div style="background:#dee3e6;"></div>
+                            </div>
+                            <span style="font-size:0.85rem; font-weight:700;">Cyber Slate</span>
+                        </div>
+                        <div class="theme-card" data-theme="midnight">
+                            <div class="theme-preview-box">
+                                <div style="background:#e0e4eb;"></div><div style="background:#4b648a;"></div>
+                                <div style="background:#e0e4eb;"></div><div style="background:#4b648a;"></div>
+                                <div style="background:#4b648a;"></div><div style="background:#e0e4eb;"></div>
+                                <div style="background:#4b648a;"></div><div style="background:#e0e4eb;"></div>
+                            </div>
+                            <span style="font-size:0.85rem; font-weight:700;">Dạ Lam</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Kết thúc trận -->
+    <div class="modal-overlay" id="game-over-modal">
+        <div class="modal" style="text-align: center;">
+            <div style="font-size: 3.5rem; margin-bottom: 12px;">♟</div>
+            <h2 id="game-over-title" style="color: #fff; margin-bottom: 8px; font-weight: 800;">Ván cờ kết thúc!</h2>
+            <p id="game-over-reason" style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-success" id="btn-replay-computer" onclick="startComputerReplay()">
+                    <i class="fas fa-history"></i> Xem lại ván cờ (Replay)
+                </button>
+                <button class="btn btn-primary" onclick="document.getElementById('game-over-modal').classList.remove('active'); document.getElementById('new-game-btn').click();">
+                    <i class="fas fa-redo"></i> Chơi lại ván mới
+                </button>
+                <a href="/pages/rooms.html" class="btn btn-secondary">
+                    <i class="fas fa-users"></i> Chơi với bạn bè
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/chess.js?v=20261030_replay_v6"></script>
+    <script src="/js/sounds.js?v=20261030_replay_v6"></script>
+    <script src="/js/chessboard.js?v=20261030_replay_v6"></script>
+    <script src="/js/auth.js?v=20261030_replay_v6"></script>
+    <script src="/js/computer.js?v=20261030_replay_v6"></script>
+    <script>
+        // Tab switching
+        const tabs = document.querySelectorAll('.sidebar-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                const target = document.getElementById(tab.dataset.target);
+                if (target) target.classList.add('active');
+            });
+        });
+
+        // Theme switching
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                const theme = card.dataset.theme;
+                if (board) board.setTheme(theme);
+            });
+        });
+    </script>
+</body>
+</html>
+

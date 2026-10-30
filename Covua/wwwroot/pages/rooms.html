@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng chơi cờ vua - Chess Online</title>
+    <link rel="stylesheet" href="/css/site.css?v=9.9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon-wrap">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <span>Chess Online</span>
+            </a>
+            <ul id="nav-links"></ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Banner chào mừng -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px 30px; margin: 20px 0 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow-card);">
+            <div>
+                <h2 style="color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.5px;">
+                    Xin chào, <span id="user-greeting" style="color: var(--primary);">Kỳ thủ</span>!
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Tạo phòng thách đấu hoặc tham gia ngay vào một phòng đang chờ sẵn.</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-primary" id="create-room-btn">
+                    <i class="fas fa-plus-circle"></i> Tạo phòng mới
+                </button>
+                <button class="btn btn-secondary" id="refresh-rooms-btn" title="Làm mới danh sách">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Form nhập mã phòng để vào trực tiếp -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px 30px; margin-bottom: 35px; box-shadow: var(--shadow-card);">
+            <h3 style="color: #fff; font-size: 1.15rem; font-weight: 700; margin-bottom: 14px;">
+                <i class="fas fa-key" style="color: var(--accent-blue);"></i> Tham gia nhanh bằng mã phòng
+            </h3>
+            <form id="join-code-form" style="display: flex; gap: 12px; max-width: 520px;">
+                <input type="text" id="room-code-input" class="form-control" placeholder="Nhập mã 6 ký tự (VD: CV89XA)..." maxlength="10" style="text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; letter-spacing: 2px;">
+                <button type="submit" class="btn btn-blue" style="white-space: nowrap;">
+                    <i class="fas fa-sign-in-alt"></i> Vào phòng
+                </button>
+            </form>
+        </div>
+
+        <!-- Danh sách các phòng đang chờ -->
+        <div class="rooms-header" style="margin-bottom: 20px;">
+            <h3 style="color: #fff; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.3px;">
+                <i class="fas fa-chess-board" style="color: var(--primary);"></i> Các phòng đang chờ đối thủ
+            </h3>
+        </div>
+
+        <div class="rooms-grid" id="rooms-list">
+            <!-- Danh sách phòng nạp bằng JS -->
+        </div>
+    </main>
+
+    <!-- Modal Tạo phòng thành công -->
+    <div class="modal-overlay" id="room-created-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle" style="color: var(--primary);"></i> Tạo Phòng Thành Công!</h3>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            
+            <p style="color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">Phòng của bạn đã sẵn sàng. Gửi mã phòng hoặc đường dẫn sau cho bạn bè để bắt đầu trận đấu:</p>
+
+            <div style="text-align: center; background: var(--bg-input); border: 1px dashed var(--primary); padding: 18px; border-radius: var(--radius-md); margin-bottom: 18px;">
+                <span style="font-size: 0.8rem; color: var(--text-dim); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">MÃ PHÒNG</span>
+                <span id="created-room-code" style="font-size: 2.4rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #86efac; letter-spacing: 5px;">------</span>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-secondary btn-sm" onclick="copyRoomCode()">
+                        <i class="far fa-copy"></i> Sao chép mã
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block;">
+                    <i class="fas fa-link"></i> Hoặc chia sẻ đường dẫn trực tiếp:
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="share-link-input" class="form-control" readonly style="font-size: 0.85rem; font-family: 'JetBrains Mono', monospace;">
+                    <button class="btn btn-secondary btn-sm" onclick="copyShareLink()">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-lg" id="enter-room-btn">
+                <i class="fas fa-chess"></i> Vào Bàn Cờ Ngay
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Chess Online – Đồ án môn học Nhóm 6</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=9.9"></script>
+    <script src="/js/rooms.js"></script>
+</body>
+</html>
+

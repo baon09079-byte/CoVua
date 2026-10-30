@@ -1,0 +1,16 @@
+{
+  "name": "chess-online",
+  "version": "1.0.0",
+  "description": "Website chơi cờ vua trực tuyến - Đồ án môn học Nhóm 6",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "test": "node test/test_all.js",
+    "test:2players": "node test/test_2players.js",
+    "install:server": "cd server && npm install"
+  },
+  "keywords": ["chess", "online", "socket.io", "express", "chess.js"],
+  "author": "Nhóm 6",
+  "license": "ISC"
+}

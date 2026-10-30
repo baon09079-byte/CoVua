@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản - Chess Online</title>
+    <link rel="stylesheet" href="/css/site.css?v=9.9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon-wrap">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <span>Chess<b>Online</b></span>
+            </a>
+            <ul id="nav-links"></ul>
+        </div>
+    </nav>
+
+    <main class="auth-page-container">
+        <div class="auth-card-wrapper">
+            <!-- Cột Trái: Giới thiệu quyền lợi thành viên -->
+            <div class="auth-showcase">
+                <div class="auth-showcase-header">
+                    <div class="auth-tag-pill">
+                        <i class="fas fa-user-plus"></i> Khởi Đầu Hành Trình
+                    </div>
+                </div>
+
+                <div class="auth-showcase-body">
+                    <h1 class="auth-showcase-title">
+                        Gia Nhập Cộng Đồng <br>
+                        <span class="gradient-text">Kỳ Thủ Đam Mê</span>
+                    </h1>
+
+                    <div class="auth-quote-box">
+                        <p class="auth-quote-text">
+                            "Mỗi ván cờ là một tác phẩm nghệ thuật chiến lược. Hãy ghi dấu ấn của bạn trên kỳ đài ngay hôm nay."
+                        </p>
+                        <span class="auth-quote-author">— Nhóm Phát Triển Chess Online</span>
+                    </div>
+
+                    <div class="auth-features-list">
+                        <div class="auth-feature-row">
+                            <div class="auth-feature-badge badge-green">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="auth-feature-info">
+                                <h4>Lưu Trữ Thành Tích Chi Tiết</h4>
+                                <p>Hồ sơ cá nhân ghi nhận số trận thắng, hòa, thua và tỷ lệ chiến thắng</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-row">
+                            <div class="auth-feature-badge badge-blue">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="auth-feature-info">
+                                <h4>Xem Lại Ván Đấu (Replay)</h4>
+                                <p>Tải lại chuỗi nước cờ PGN và trạng thái bàn cờ FEN chuẩn xác</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-row">
+                            <div class="auth-feature-badge badge-purple">
+                                <i class="fas fa-share-alt"></i>
+                            </div>
+                            <div class="auth-feature-info">
+                                <h4>Tạo Phòng & Mời Bạn Bè</h4>
+                                <p>Chia sẻ mã phòng hoặc đường link để thi đấu tay đôi trực tiếp</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-showcase-footer">
+                    <div class="auth-status-online">
+                        <span class="status-ping-dot"></span>
+                        <span>Đăng ký hoàn toàn miễn phí</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-graduation-cap"></i> Đồ án Nhóm 6
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột Phải: Biểu mẫu Đăng Ký -->
+            <div class="auth-form-column">
+                <div class="auth-header">
+                    <div class="auth-header-sub">
+                        <i class="fas fa-user-check"></i> Tạo Tài Khoản Mới
+                    </div>
+                    <h2>Đăng Ký Kỳ Thủ</h2>
+                    <p>Điền thông tin bên dưới để khởi tạo tài khoản thi đấu</p>
+                </div>
+
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i> Tên người dùng
+                        </label>
+                        <div class="form-control-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                class="form-control" 
+                                placeholder="Nhập tên tài khoản mong muốn..." 
+                                required 
+                                autocomplete="username"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Địa chỉ Email
+                        </label>
+                        <div class="form-control-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                class="form-control" 
+                                placeholder="vidu@email.com" 
+                                required 
+                                autocomplete="email"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Mật khẩu
+                        </label>
+                        <div class="form-control-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                class="form-control" 
+                                placeholder="Tối thiểu 6 ký tự..." 
+                                required 
+                                autocomplete="new-password"
+                            >
+                            <button type="button" class="toggle-password" id="toggle-reg-pass-btn" title="Hiện/ẩn mật khẩu">
+                                <i class="fas fa-eye" id="reg-eye-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">
+                            <i class="fas fa-shield-alt"></i> Xác nhận mật khẩu
+                        </label>
+                        <div class="form-control-wrapper">
+                            <i class="fas fa-check-double input-icon"></i>
+                            <input 
+                                type="password" 
+                                id="confirm-password" 
+                                class="form-control" 
+                                placeholder="Nhập lại mật khẩu..." 
+                                required 
+                                autocomplete="new-password"
+                            >
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">
+                        <i class="fas fa-user-plus"></i> Hoàn Tất Đăng Ký
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    Đã có tài khoản kỳ thủ? <a href="/pages/login.html">Đăng nhập ngay <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Chess Online – Đồ án môn học Nhóm 6</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=9.9"></script>
+    <script>
+        // Toggle ẩn/hiện mật khẩu
+        const toggleBtn = document.getElementById('toggle-reg-pass-btn');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('reg-eye-icon');
+
+        if (toggleBtn && passwordInput && eyeIcon) {
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                eyeIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            });
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (username.length < 3) {
+                showToast('Tên người dùng phải có ít nhất 3 ký tự!', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Mật khẩu phải chứa ít nhất 6 ký tự!', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showToast('Mật khẩu xác nhận không khớp!', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...';
+
+            try {
+                // Thử gửi tới máy chủ hiện tại
+                let res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                }).catch(() => null);
+
+                // Nếu fetch relative bị 404 hoặc mất kết nối, thử fallback sang cổng 3000
+                if (!res || res.status === 404) {
+                    try {
+                        const fallbackRes = await fetch('http://localhost:3000/api/auth/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username, email, password })
+                        });
+                        if (fallbackRes) res = fallbackRes;
+                    } catch (e2) {}
+                }
+
+                if (!res) {
+                    showToast('Không thể kết nối tới máy chủ. Vui lòng đảm bảo ứng dụng đang chạy!', 'error');
+                    return;
+                }
+
+                let data = {};
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    data = { message: 'Lỗi phản hồi dữ liệu máy chủ' };
+                }
+
+                if (res.ok) {
+                    showToast(data.message || 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/pages/login.html';
+                    }, 1200);
+                } else {
+                    showToast(data.message || 'Đăng ký thất bại. Vui lòng thử lại!', 'error');
+                }
+            } catch (err) {
+                showToast('Đã xảy ra lỗi: ' + (err.message || 'Không thể liên lạc máy chủ'), 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Hoàn Tất Đăng Ký';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Online - Đấu cờ vua trực tuyến đỉnh cao</title>
+    <link rel="stylesheet" href="/css/site.css?v=9.9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon-wrap">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <span>Chess Online</span>
+            </a>
+            <ul id="nav-links">
+                <!-- Nạp tự động bởi auth.js -->
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-pill">
+                <i class="fas fa-bolt"></i> Nền tảng cờ vua trực tuyến thế hệ mới
+            </div>
+            <h1>
+                Đấu Trí Cờ Vua <span class="highlight-text">Thời Gian Thực</span>
+            </h1>
+            <p>
+                Trải nghiệm thi đấu cờ vua mượt mà cùng bạn bè qua mạng với Socket.IO, trò chuyện và gọi video call WebRTC trực tiếp, hoặc so tài cùng trí tuệ nhân tạo Minimax AI.
+            </p>
+            <div class="cta-buttons">
+                <a href="/pages/rooms.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-play"></i> Chơi với bạn bè ngay
+                </a>
+                <a href="/pages/computer.html" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-robot"></i> Thử thách với máy tính
+                </a>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <h4>100%</h4>
+                    <p>Chuẩn Luật FIDE</p>
+                </div>
+                <div class="hero-stat-item">
+                    <h4>&lt; 50ms</h4>
+                    <p>Đồng Bộ Socket.IO</p>
+                </div>
+                <div class="hero-stat-item">
+                    <h4>WebRTC</h4>
+                    <p>Đàm Thoại Video HD</p>
+                </div>
+                <div class="hero-stat-item">
+                    <h4>AI Engine</h4>
+                    <p>Minimax Alpha-Beta</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4 Chế độ chơi chính -->
+        <section class="features">
+            <div class="feature">
+                <div class="feature-icon-box">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Đấu 2 Người Trực Tuyến</h3>
+                <p>Tạo phòng riêng, chia sẻ mã phòng 6 ký tự hoặc đường dẫn trực tiếp để thi đấu cùng bạn bè với đồng hồ bấm giờ thời gian thực.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon-box" style="background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2);">
+                    <i class="fas fa-video" style="color: var(--accent-blue);"></i>
+                </div>
+                <h3>Video Call & Trò Chuyện</h3>
+                <p>Bật camera và micro qua WebRTC Peer-to-Peer ngay bên cạnh bàn cờ để giao lưu trực tiếp và quan sát đối thủ từng nước cờ.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon-box" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2);">
+                    <i class="fas fa-brain" style="color: var(--accent-gold);"></i>
+                </div>
+                <h3>Đấu Trí Tuệ Nhân Tạo</h3>
+                <p>Luyện tập nâng cao trình độ với thuật toán Minimax kết hợp Alpha-Beta Pruning và Piece-Square Tables ở 3 cấp độ: Dễ, Trung bình, Khó.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon-box" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2);">
+                    <i class="fas fa-history" style="color: #c084fc;"></i>
+                </div>
+                <h3>Lưu & Tua Lại Ván Đấu</h3>
+                <p>Tự động lưu ván cờ vào CSDL SQL Server. Bạn có thể mở lại bất kỳ ván đấu nào để phân tích từng nước cờ với tính năng Game Review.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Chess Online – Đồ án môn học Nhóm 6 thành viên. Xây dựng bằng Node.js, Socket.IO & SQL Server.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=9.9"></script>
+</body>
+</html>
+

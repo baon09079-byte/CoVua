@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ & Lịch sử trận đấu - Chess Online</title>
+    <link rel="stylesheet" href="/css/site.css?v=9.9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ================= DEDICATED PROFILE PAGE STYLES (INLINE FOR INSTANT RELOAD) ================= */
+        .profile-layout-container {
+            max-width: 1300px;
+            margin: 30px auto 60px;
+            padding: 0 20px;
+        }
+
+        .profile-grid-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        /* Thẻ hồ sơ bên trái */
+        .profile-sidebar-card {
+            background: linear-gradient(165deg, #171d28 0%, #0e1219 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-sidebar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #81b64c, #38bdf8);
+        }
+
+        .profile-crown-avatar-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+        }
+
+        .profile-crown-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 3px solid #81b64c;
+            box-shadow: 0 0 30px rgba(129, 182, 76, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.2rem;
+            color: #fbbf24;
+            user-select: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .profile-crown-avatar:hover {
+            transform: scale(1.05) rotate(-3deg);
+        }
+
+        .profile-player-title {
+            color: #ffffff;
+            font-size: 1.65rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .profile-player-email {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            word-break: break-all;
+        }
+
+        .profile-rank-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(129, 182, 76, 0.12);
+            border: 1px solid rgba(129, 182, 76, 0.35);
+            color: #86efac;
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .profile-block-heading {
+            color: #94a3b8;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Lưới 4 ô thống kê */
+        .stats-2x2-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stats-tile-item {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            transition: all 0.22s ease;
+        }
+
+        .stats-tile-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .stats-tile-num {
+            font-size: 1.85rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .stats-tile-label {
+            font-size: 0.76rem;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Thanh tỉ lệ thắng */
+        .winrate-dashboard-card {
+            background: rgba(14, 18, 24, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .winrate-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .winrate-label {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .winrate-percent-text {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #86efac;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .winrate-progress-track {
+            width: 100%;
+            height: 9px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .winrate-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #81b64c);
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 12px rgba(129, 182, 76, 0.6);
+        }
+
+        /* Form sửa tên */
+        .rename-account-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 20px;
+            text-align: left;
+        }
+
+        /* Thẻ lịch sử bên phải */
+        .history-main-card {
+            background: linear-gradient(165deg, #151a24 0%, #10141d 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .history-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .history-main-title {
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .history-badge-count {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            font-size: 0.84rem;
+            font-weight: 700;
+            padding: 5px 14px;
+            border-radius: 20px;
+        }
+
+        .matches-data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .matches-data-table th {
+            background: transparent;
+            color: #64748b;
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 10px 16px;
+            text-align: left;
+            border: none;
+        }
+
+        .matches-data-table tr td {
+            background: rgba(255, 255, 255, 0.025);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 14px 16px;
+            font-size: 0.92rem;
+            vertical-align: middle;
+            transition: all 0.2s ease;
+        }
+
+        .matches-data-table tr td:first-child {
+            border-left: 1px solid rgba(255, 255, 255, 0.04);
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .matches-data-table tr td:last-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .matches-data-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Hỗ trợ cả 2 bộ class để tương thích hoàn toàn */
+        .game-match-id, .game-id-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
+        .game-side-pill, .piece-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 0.88rem;
+        }
+
+        .game-side-pill.white, .piece-tag.white { color: #f8fafc; }
+        .game-side-pill.black, .piece-tag.black { color: #94a3b8; }
+
+        .game-outcome-badge, .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .game-outcome-badge.win, .result-badge.win {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .game-outcome-badge.loss, .result-badge.loss {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        .game-outcome-badge.draw, .result-badge.draw {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        .action-review-button, .btn-review {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-review-button:hover, .btn-review:hover {
+            background: #38bdf8;
+            color: #0c0f14;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 992px) {
+            .profile-grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon-wrap">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <span>Chess Online</span>
+            </a>
+            <ul id="nav-links"></ul>
+        </div>
+    </nav>
+
+    <main class="profile-layout-container">
+        <div class="profile-grid-container">
+            <!-- Cột trái: Thông tin tài khoản & Thống kê -->
+            <div>
+                <div class="profile-sidebar-card">
+                    <div class="profile-crown-avatar-wrapper">
+                        <div class="profile-crown-avatar">♔</div>
+                    </div>
+                    <h2 id="profile-username" class="profile-player-title">Người dùng</h2>
+                    <p id="profile-email" class="profile-player-email">email@example.com</p>
+                    <div>
+                        <span class="profile-rank-tag"><i class="fas fa-chess-knight"></i> Kỳ thủ chính thức</span>
+                    </div>
+
+                    <!-- Thống kê thành tích -->
+                    <div class="profile-block-heading">
+                        <i class="fas fa-chart-pie" style="color: #38bdf8;"></i> Thành tích thi đấu
+                    </div>
+                    <div class="stats-2x2-grid">
+                        <div class="stats-tile-item">
+                            <div class="stats-tile-num" id="stat-total" style="color: #38bdf8;">0</div>
+                            <div class="stats-tile-label">Tổng trận</div>
+                        </div>
+                        <div class="stats-tile-item">
+                            <div class="stats-tile-num" id="stat-wins" style="color: #4ade80;">0</div>
+                            <div class="stats-tile-label">Chiến thắng</div>
+                        </div>
+                        <div class="stats-tile-item">
+                            <div class="stats-tile-num" id="stat-losses" style="color: #f87171;">0</div>
+                            <div class="stats-tile-label">Thất bại</div>
+                        </div>
+                        <div class="stats-tile-item">
+                            <div class="stats-tile-num" id="stat-draws" style="color: #fbbf24;">0</div>
+                            <div class="stats-tile-label">Hòa cờ</div>
+                        </div>
+                    </div>
+
+                    <div class="winrate-dashboard-card">
+                        <div class="winrate-header-flex">
+                            <span class="winrate-label">Tỉ lệ chiến thắng</span>
+                            <strong class="winrate-percent-text" id="stat-winrate">0%</strong>
+                        </div>
+                        <div class="winrate-progress-track">
+                            <div class="winrate-progress-fill" id="stat-winrate-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sửa tên hiển thị -->
+                    <div class="rename-account-section">
+                        <div class="profile-block-heading">
+                            <i class="fas fa-user-edit" style="color: #81b64c;"></i> Đổi tên hiển thị
+                        </div>
+                        <form id="update-profile-form">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <input type="text" id="new-username-input" class="form-control" placeholder="Nhập tên mới..." minlength="3" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block btn-sm">
+                                <i class="fas fa-save"></i> Cập nhật tên
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Bảng lịch sử các trận đấu -->
+            <div>
+                <div class="history-main-card">
+                    <div class="history-header-flex">
+                        <h3 class="history-main-title">
+                            <i class="fas fa-history" style="color: #38bdf8;"></i> Lịch sử các trận đấu gần đây
+                        </h3>
+                        <span class="history-badge-count" id="history-total-badge">Đang tải...</span>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="matches-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã trận</th>
+                                    <th>Đối thủ</th>
+                                    <th>Cầm quân</th>
+                                    <th>Kết quả</th>
+                                    <th>Số nước</th>
+                                    <th>Thời gian</th>
+                                    <th style="text-align: right;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- Nạp tự động bằng JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Xem lại trận đấu (Game Review Replay) -->
+    <div class="modal-overlay" id="review-modal">
+        <div class="modal" style="max-width: 860px; width: 95%;">
+            <div class="modal-header">
+                <h3><i class="fas fa-chess-board" style="color: var(--primary);"></i> Phân Tích & Xem Lại Ván Cờ (Replay)</h3>
+                <button class="modal-close" id="review-close-btn">&times;</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); padding: 10px 16px; border-radius: var(--radius-sm); margin-bottom: 14px; font-size: 0.95rem; border: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
+                <div><span style="color: var(--text-dim);">Trắng:</span> <strong id="review-white-name" style="color: #fff;">-</strong></div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-keyboard"></i> Phím ← / → tua 1 nước, ↑ / ↓ tua 5s, Space phát</div>
+                <div><span style="color: var(--text-dim);">Đen:</span> <strong id="review-black-name" style="color: #fff;">-</strong></div>
+            </div>
+
+            <div class="review-modal-grid" style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 16px; align-items: start;">
+                <!-- Cột Trái: Bàn cờ xem lại & Thanh điều khiển -->
+                <div>
+                    <div id="review-board-mount" style="max-width: 400px; margin: 0 auto 10px;"></div>
+
+                    <div style="text-align: center; margin-bottom: 8px;">
+                        <span id="review-move-label" style="font-weight: 700; color: #86efac; font-size: 0.95rem; font-family: 'JetBrains Mono', monospace;">Trạng thái ban đầu</span>
+                    </div>
+
+                    <!-- Thanh tua trực quan (Timeline Slider) -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; background: rgba(255,255,255,0.04); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                        <span id="review-slider-current" style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; font-family: monospace; min-width: 25px;">0</span>
+                        <input type="range" id="review-timeline-slider" min="0" max="0" value="0" style="flex: 1; accent-color: #81b64c; cursor: pointer; height: 6px;">
+                        <span id="review-slider-max" style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; font-family: monospace; min-width: 25px; text-align: right;">0</span>
+                    </div>
+
+                    <!-- Bảng nút tua & điều khiển -->
+                    <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                        <!-- Hàng 1: Nút tua 10s, 5s và các phím điều hướng -->
+                        <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-secondary btn-sm" id="review-first-btn" title="Về đầu ván (Home)"><i class="fas fa-step-backward"></i></button>
+                            <button class="btn btn-secondary btn-sm" id="review-jump-back-10" title="Tua lùi 10 nước (-10s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">-10s</button>
+                            <button class="btn btn-secondary btn-sm" id="review-jump-back-5" title="Tua lùi 5 nước (-5s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">-5s</button>
+                            <button class="btn btn-secondary btn-sm" id="review-prev-btn" title="Nước trước (←)"><i class="fas fa-chevron-left"></i></button>
+                            <button class="btn btn-primary btn-sm" id="review-play-btn" style="min-width: 85px;" title="Tự động phát (Space)"><i class="fas fa-play"></i> Phát</button>
+                            <button class="btn btn-secondary btn-sm" id="review-next-btn" title="Nước kế (→)"><i class="fas fa-chevron-right"></i></button>
+                            <button class="btn btn-secondary btn-sm" id="review-jump-fwd-5" title="Tua tới 5 nước (+5s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">+5s</button>
+                            <button class="btn btn-secondary btn-sm" id="review-jump-fwd-10" title="Tua tới 10 nước (+10s)" style="font-weight: 800; font-size: 0.78rem; padding: 4px 8px;">+10s</button>
+                            <button class="btn btn-secondary btn-sm" id="review-last-btn" title="Đến cuối ván (End)"><i class="fas fa-step-forward"></i></button>
+                        </div>
+
+                        <!-- Hàng 2: Chọn tốc độ Replay -->
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 700;"><i class="fas fa-tachometer-alt"></i> Tốc độ:</span>
+                            <div class="review-speed-selector" style="display: inline-flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; border: 1px solid rgba(255,255,255,0.08); gap: 2px;">
+                                <button type="button" class="review-speed-btn" data-speed="0.5" style="padding: 3px 9px; font-size: 0.78rem; border-radius: 4px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: 700;">0.5x</button>
+                                <button type="button" class="review-speed-btn active" data-speed="1.0" style="padding: 3px 9px; font-size: 0.78rem; border-radius: 4px; border: none; background: #81b64c; color: #fff; cursor: pointer; font-weight: 700;">1x</button>
+                                <button type="button" class="review-speed-btn" data-speed="1.5" style="padding: 3px 9px; font-size: 0.78rem; border-radius: 4px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: 700;">1.5x</button>
+                                <button type="button" class="review-speed-btn" data-speed="2.0" style="padding: 3px 9px; font-size: 0.78rem; border-radius: 4px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: 700;">2x</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột Phải: Bảng danh sách tất cả các nước đi -->
+                <div style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; height: 440px; display: flex; flex-direction: column;">
+                    <div style="font-weight: 700; color: #fff; font-size: 0.9rem; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-list-ol"></i> Tiến trình ván đấu</span>
+                        <span style="font-size: 0.8rem; color: var(--text-dim);" id="review-moves-count">0 nước</span>
+                    </div>
+                    <div id="review-moves-container" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <!-- Nạp danh sách nước đi -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Chess Online – Đồ án môn học Nhóm 6</p>
+        </div>
+    </footer>
+
+    <script src="/js/chess.js?v=20261030_replay_v6"></script>
+    <script src="/js/sounds.js?v=20261030_replay_v6"></script>
+    <script src="/js/chessboard.js?v=20261030_replay_v6"></script>
+    <script src="/js/auth.js?v=20261030_replay_v6"></script>
+    <script src="/js/profile.js?v=20261030_replay_v6"></script>
+</body>
+</html>

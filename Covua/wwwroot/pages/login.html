@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Chess Online</title>
+    <link rel="stylesheet" href="/css/site.css?v=9.9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon-wrap">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <span>Chess<b>Online</b></span>
+            </a>
+            <ul id="nav-links"></ul>
+        </div>
+    </nav>
+
+    <main class="auth-page-container">
+        <div class="auth-card-wrapper">
+            <!-- Cột Trái: Trưng bày Thương hiệu & Giới thiệu tính năng -->
+            <div class="auth-showcase">
+                <div class="auth-showcase-header">
+                    <div class="auth-tag-pill">
+                        <i class="fas fa-crown"></i> Chuẩn Thi Đấu Quốc Tế
+                    </div>
+                </div>
+
+                <div class="auth-showcase-body">
+                    <h1 class="auth-showcase-title">
+                        Chinh Phục Đỉnh Cao <br>
+                        <span class="gradient-text">Kỳ Đài Trực Tuyến</span>
+                    </h1>
+
+                    <div class="auth-quote-box">
+                        <p class="auth-quote-text">
+                            "Cờ vua là cuộc so tài trí tuệ đỉnh cao, nơi mỗi nước cờ đều phản ánh tầm nhìn chiến lược của một kỳ thủ."
+                        </p>
+                        <span class="auth-quote-author">— Garry Kasparov</span>
+                    </div>
+
+                    <div class="auth-features-list">
+                        <div class="auth-feature-row">
+                            <div class="auth-feature-badge badge-green">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="auth-feature-info">
+                                <h4>Thi Đấu Thời Gian Thực</h4>
+                                <p>Đồng bộ nước đi tốc độ mili-giây qua Socket.IO cùng đồng hồ LED</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-row">
+                            <div class="auth-feature-badge badge-blue">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="auth-feature-info">
+                                <h4>Trí Tuệ Nhân Tạo AI</h4>
+                                <p>Rèn luyện đối đầu thuật toán Minimax và Stockfish đa cấp độ</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-row">
+                            <div class="auth-feature-badge badge-purple">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="auth-feature-info">
+                                <h4>Video Call & Trò Chuyện Trực Tuyến</h4>
+                                <p>Tương tác khuôn mặt và trao đổi qua WebRTC thời gian thực</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-showcase-footer">
+                    <div class="auth-status-online">
+                        <span class="status-ping-dot"></span>
+                        <span>Máy chủ trực tuyến sẵn sàng</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-graduation-cap"></i> Đồ án Nhóm 6
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột Phải: Biểu mẫu Đăng Nhập -->
+            <div class="auth-form-column">
+                <div class="auth-header">
+                    <div class="auth-header-sub">
+                        <i class="fas fa-shield-alt"></i> Cổng Xác Thực
+                    </div>
+                    <h2>Đăng Nhập Kỳ Đài</h2>
+                    <p>Đăng nhập để vào phòng thi đấu và lưu bảng vàng thành tích</p>
+                </div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i> Tên đăng nhập
+                        </label>
+                        <div class="form-control-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                class="form-control" 
+                                placeholder="Nhập tên đăng nhập của bạn..." 
+                                required 
+                                autocomplete="username"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Mật khẩu
+                        </label>
+                        <div class="form-control-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                class="form-control" 
+                                placeholder="Nhập mật khẩu..." 
+                                required 
+                                autocomplete="current-password"
+                            >
+                            <button type="button" class="toggle-password" id="toggle-password-btn" title="Hiện/ẩn mật khẩu">
+                                <i class="fas fa-eye" id="password-eye-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options-row">
+                        <label class="form-check">
+                            <input type="checkbox" id="remember-me" checked>
+                            <span>Ghi nhớ đăng nhập</span>
+                        </label>
+                        <a href="javascript:void(0)" class="form-link" onclick="handleForgotPassword()">Quên mật khẩu?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">
+                        <i class="fas fa-sign-in-alt"></i> Đăng Nhập Ngay
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>HOẶC</span>
+                </div>
+
+                <a href="/pages/computer.html" class="btn btn-secondary btn-block">
+                    <i class="fas fa-robot"></i> Chơi ngay với Máy tính (Chế độ Khách)
+                </a>
+
+                <div class="auth-footer">
+                    Chưa có tài khoản? <a href="/pages/register.html">Đăng ký tài khoản mới <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Chess Online – Đồ án môn học Nhóm 6</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=9.9"></script>
+    <script>
+        // Toggle ẩn/hiện mật khẩu
+        const toggleBtn = document.getElementById('toggle-password-btn');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('password-eye-icon');
+
+        if (toggleBtn && passwordInput && eyeIcon) {
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                eyeIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            });
+        }
+
+        // Hướng dẫn quên mật khẩu
+        function handleForgotPassword() {
+            showToast('Vui lòng liên hệ quản trị viên hoặc đăng ký tài khoản mới!', 'info');
+        }
+
+        // Xử lý nộp form đăng nhập
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (!username || !password) {
+                showToast('Vui lòng điền đầy đủ tên đăng nhập và mật khẩu', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
+
+            try {
+                let res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                }).catch(() => null);
+
+                // Fallback nếu máy chủ hiện tại trả 404 hoặc mất kết nối
+                if (!res || res.status === 404) {
+                    try {
+                        const fallbackRes = await fetch('http://localhost:3000/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username, password })
+                        });
+                        if (fallbackRes) res = fallbackRes;
+                    } catch (e2) {}
+                }
+
+                if (!res) {
+                    showToast('Không thể kết nối máy chủ! Vui lòng đảm bảo ứng dụng đang chạy.', 'error');
+                    return;
+                }
+
+                let data = {};
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    data = { message: 'Lỗi định dạng dữ liệu từ máy chủ' };
+                }
+
+                if (res.ok) {
+                    Auth.setToken(data.token);
+                    Auth.setUser(data.user);
+                    showToast('Đăng nhập thành công! Đang vào sảnh phòng...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/pages/rooms.html';
+                    }, 700);
+                } else {
+                    showToast(data.message || 'Tên đăng nhập hoặc mật khẩu không chính xác', 'error');
+                }
+            } catch (err) {
+                showToast('Không thể kết nối máy chủ! Vui lòng thử lại.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng Nhập Ngay';
+            }
+        });
+    </script>
+</body>
+</html>
