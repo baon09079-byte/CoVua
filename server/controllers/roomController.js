@@ -53,7 +53,7 @@ exports.joinRoom = async (req, res) => {
         }
 
         const upperCode = roomCode.trim().toUpperCase();
-        const [rooms] = await db.execute('SELECT * FROM Rooms WHERE room_code = ?', [upperCode]);
+        const [rooms] = await db.execute('SELECT * FROM Rooms WHERE UPPER(LTRIM(RTRIM(room_code))) = ?', [upperCode]);
         
         if (!rooms || rooms.length === 0) {
             return res.status(404).json({ message: 'Không tìm thấy phòng chơi với mã này' });
@@ -62,8 +62,18 @@ exports.joinRoom = async (req, res) => {
         const room = rooms[0];
         
         // Lấy game tương ứng
-        const [games] = await db.execute('SELECT * FROM Games WHERE room_id = ? ORDER BY id DESC', [room.id]);
-        const game = games && games[0];
+        let [games] = await db.execute('SELECT * FROM Games WHERE room_id = ? ORDER BY id DESC', [room.id]);
+        let game = games && games[0];
+
+        if (!game) {
+            const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            await db.execute(
+                'INSERT INTO Games (room_id, white_player_id, black_player_id, current_fen, move_history, status, result) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [room.id, room.host_user_id, null, initialFen, '[]', 'waiting', 'none']
+            );
+            const [newGames] = await db.execute('SELECT * FROM Games WHERE room_id = ? ORDER BY id DESC', [room.id]);
+            game = newGames && newGames[0];
+        }
 
         // Nếu người chơi là Host (đang vào lại phòng)
         if (Number(room.host_user_id) === Number(userId)) {

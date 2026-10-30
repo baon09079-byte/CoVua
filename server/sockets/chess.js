@@ -225,6 +225,11 @@ module.exports = (io) => {
                             const [ub] = await db.execute('SELECT username FROM Users WHERE id = ?', [game.black_player_id]);
                             if (ub && ub[0]) blackName = ub[0].username;
                         }
+                        // Khôi phục phòng thành 'waiting' nếu chủ phòng đang ở trong phòng chờ người chơi
+                        if (!game.black_player_id || history.length === 0) {
+                            await db.execute("UPDATE Rooms SET status = 'waiting' WHERE id = ?", [room.id]);
+                            room.status = 'waiting';
+                        }
                     } else if (isBlackPlayer || !game.black_player_id || history.length === 0) {
                         // Người chơi thứ 2 là Quân Đen
                         socket.userRole = 'black';
@@ -820,15 +825,17 @@ module.exports = (io) => {
                         message: `${username} đã rời phòng`
                     });
 
-                    // Nếu người duy nhất đang chờ cũng đã thoát -> Đóng phòng để biến mất khỏi danh sách chờ
-                    setTimeout(async () => {
-                        const remSockets = io.sockets.adapter.rooms.get(targetRoom);
-                        if (!remSockets || remSockets.size === 0) {
-                            await db.execute("UPDATE Rooms SET status = 'finished' WHERE id = ?", [room.id]);
-                            console.log(`[Phòng trống] ${targetRoom} không còn ai ở lại -> Đã đóng phòng.`);
-                        }
-                        io.emit('roomsUpdated');
-                    }, 500);
+                    // Nếu chủ phòng CHỦ ĐỘNG bấm nút "Rời phòng" -> Đóng phòng để biến mất khỏi danh sách chờ
+                    if (isExplicitLeave) {
+                        setTimeout(async () => {
+                            const remSockets = io.sockets.adapter.rooms.get(targetRoom);
+                            if (!remSockets || remSockets.size === 0) {
+                                await db.execute("UPDATE Rooms SET status = 'finished' WHERE id = ?", [room.id]);
+                                console.log(`[Phòng trống] ${targetRoom} không còn ai ở lại -> Đã đóng phòng.`);
+                            }
+                            io.emit('roomsUpdated');
+                        }, 5000);
+                    }
                     return;
                 }
 
@@ -906,15 +913,17 @@ module.exports = (io) => {
                     }, 15000);
                 }
 
-                // Luôn kiểm tra nếu phòng không còn ai ở lại (kể cả sau khi xử thua hoặc rời phòng)
-                setTimeout(async () => {
-                    const remSockets = io.sockets.adapter.rooms.get(targetRoom);
-                    if (!remSockets || remSockets.size === 0) {
-                        await db.execute("UPDATE Rooms SET status = 'finished' WHERE room_code = ?", [rCode]);
-                        console.log(`[Phòng trống] ${targetRoom} không còn ai ở trong -> Đã tự động đóng phòng.`);
-                        io.emit('roomsUpdated');
-                    }
-                }, 1000);
+                // Chỉ đóng phòng khi người chơi CHỦ ĐỘNG bấm nút "Rời phòng"
+                if (isExplicitLeave) {
+                    setTimeout(async () => {
+                        const remSockets = io.sockets.adapter.rooms.get(targetRoom);
+                        if (!remSockets || remSockets.size === 0) {
+                            await db.execute("UPDATE Rooms SET status = 'finished' WHERE room_code = ?", [rCode]);
+                            console.log(`[Phòng trống] ${targetRoom} không còn ai ở trong -> Đã tự động đóng phòng.`);
+                            io.emit('roomsUpdated');
+                        }
+                    }, 5000);
+                }
             } catch (err) {
                 console.error('[handlePlayerLeave Error]:', err);
             }
@@ -930,20 +939,4 @@ module.exports = (io) => {
             await handlePlayerLeave(socket, false);
         });
     });
-
-    // Định kỳ dọn dẹp các phòng waiting không có ai kết nối (chạy mỗi 10 giây)
-    setInterval(async () => {
-        try {
-            const [waitingRooms] = await db.execute("SELECT id, room_code FROM Rooms WHERE status = 'waiting'");
-            if (waitingRooms && waitingRooms.length > 0) {
-                for (const wr of waitingRooms) {
-                    const rSockets = io.sockets.adapter.rooms.get(`room_${wr.room_code}`);
-                    if (!rSockets || rSockets.size === 0) {
-                        await db.execute("UPDATE Rooms SET status = 'finished' WHERE id = ?", [wr.id]);
-                        console.log(`[Tự động dọn phòng] Phòng ${wr.room_code} không còn ai ở trong -> Đã đóng.`);
-                    }
-                }
-            }
-        } catch (e) {}
-    }, 10000);
 };

@@ -124,21 +124,18 @@ async function handleCreateRoom() {
             const shareLinkInput = document.getElementById('share-link-input');
             const enterRoomBtn = document.getElementById('enter-room-btn');
 
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            let shareHost = window.location.host;
+            let fullUrl = `${window.location.origin}/pages/game.html?room=${data.roomCode}&join=1`;
 
             try {
                 const sInfo = await fetch('/api/server-info');
                 if (sInfo.ok) {
                     const info = await sInfo.json();
-                    if (!isLocal && info.ip && info.ip !== '127.0.0.1') {
-                        const portStr = window.location.port ? `:${window.location.port}` : '';
-                        shareHost = `${info.ip}${portStr}`;
+                    if (info.ip && info.ip !== '127.0.0.1') {
+                        // Ưu tiên đường dẫn qua IP mạng LAN (cổng 3000) để thiết bị thứ hai (điện thoại/máy khác cùng Wi-Fi) truy cập trực tiếp
+                        fullUrl = `http://${info.ip}:3000/pages/game.html?room=${data.roomCode}&join=1`;
                     }
                 }
             } catch (e) {}
-
-            const fullUrl = `${window.location.protocol}//${shareHost}/pages/game.html?room=${data.roomCode}&join=1`;
 
             if (roomCodeDisplay) roomCodeDisplay.textContent = data.roomCode;
             if (shareLinkInput) shareLinkInput.value = fullUrl;
@@ -178,24 +175,28 @@ async function joinRoomDirect(roomCode) {
     const user = Auth.getUser();
     if (!user) return;
 
-    try {
-        const res = await Auth.fetchWithAuth('/api/rooms/join', {
-            method: 'POST',
-            body: JSON.stringify({ roomCode, userId: user.id })
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            showToast(data.message || 'Tham gia phòng thành công!', 'success');
-            setTimeout(() => {
-                window.location.href = `/pages/game.html?room=${roomCode}`;
-            }, 600);
-        } else {
-            showToast(data.message || 'Không thể vào phòng', 'error');
-        }
-    } catch (err) {
-        showToast('Lỗi khi tham gia phòng', 'error');
+    const cleanCode = (roomCode || '').trim().toUpperCase();
+    if (!cleanCode) {
+        showToast('Vui lòng nhập mã phòng hợp lệ', 'error');
+        return;
     }
+
+    showToast('Đang kết nối vào phòng thời gian thực...', 'info');
+
+    // Đồng thời gọi API chuẩn bị ván đấu trong CSDL
+    try {
+        await Auth.fetchWithAuth('/api/rooms/join', {
+            method: 'POST',
+            body: JSON.stringify({ roomCode: cleanCode, userId: user.id })
+        });
+    } catch (err) {
+        console.warn('API join notice:', err);
+    }
+
+    // Luôn chuyển hướng ngay lập tức sang trang game để Socket.IO kết nối thời gian thực (Real-time)
+    setTimeout(() => {
+        window.location.href = `/pages/game.html?room=${cleanCode}&join=1`;
+    }, 200);
 }
 
 // Sao chép mã phòng vào clipboard

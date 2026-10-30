@@ -138,15 +138,19 @@ if (document.readyState === 'loading') {
 // ================= SOCKET.IO & GAME STATE =================
 function initSocket() {
     let socketUrl = undefined;
-    // Nếu chạy qua HTTPS (như https://localhost:7015), luôn dùng same-origin để không bị trình duyệt chặn Mixed Content
-    // và ASP.NET Core sẽ proxy /socket.io sang Node.js
-    if (window.location.protocol === 'http:' && window.location.port !== '3000' && window.location.port !== '7015' && window.location.port !== '5000') {
+    // Nếu chạy qua HTTPS (như https://localhost:7015), dùng same-origin để ASP.NET Core proxy /socket.io về Node.js (tránh Mixed Content)
+    // Nếu chạy qua HTTP, kết nối trực tiếp đến Node.js cổng 3000
+    if (window.location.protocol === 'http:' && window.location.port !== '3000') {
         socketUrl = `http://${window.location.hostname || 'localhost'}:3000`;
     }
     try {
         socket = typeof io !== 'undefined' ? io(socketUrl, {
             transports: ['websocket', 'polling'],
-            timeout: 10000
+            timeout: 10000,
+            reconnection: true,
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000
         }) : null;
     } catch (e) {
         socket = null;
@@ -160,7 +164,16 @@ function initSocket() {
     socket.on('connect_error', (err) => {
         console.warn('[Socket connect_error]:', err);
         const badge = document.getElementById('turn-status-badge');
-        if (badge && badge.textContent === 'Đang kết nối...') {
+        if (badge) {
+            badge.textContent = 'Mất kết nối máy chủ';
+            badge.className = 'badge badge-loss';
+        }
+    });
+
+    socket.on('disconnect', (reason) => {
+        console.warn('[Socket disconnect]:', reason);
+        const badge = document.getElementById('turn-status-badge');
+        if (badge) {
             badge.textContent = 'Mất kết nối máy chủ';
             badge.className = 'badge badge-loss';
         }
@@ -168,6 +181,11 @@ function initSocket() {
 
     socket.on('connect', () => {
         console.log('[Socket] Đã kết nối với máy chủ!');
+        const badge = document.getElementById('turn-status-badge');
+        if (badge && badge.textContent === 'Mất kết nối máy chủ') {
+            badge.textContent = 'Đã kết nối lại';
+            badge.className = 'badge badge-win';
+        }
         // Gửi yêu cầu tham gia phòng
         socket.emit('joinRoom', {
             roomCode,
@@ -1093,14 +1111,63 @@ function escapeHtml(str) {
 }
 
 // ================= WEBRTC VIDEO CALL =================
-async function startVideoCall() {
+let pendingIceCandidates = [];
+
+function switchToVideoTab() {
+    const tabs = document.querySelectorAll('.sidebar-tab');
+    tabs.forEach(t => {
+        if (t.dataset.target === 'tab-video') {
+            t.classList.add('active');
+        } else {
+            t.classList.remove('active');
+        }
+    });
+    document.querySelectorAll('.tab-content').forEach(c => {
+        if (c.id === 'tab-video') {
+            c.classList.add('active');
+        } else {
+            c.classList.remove('active');
+        }
+    });
+}
+
+// Hàm lấy stream media an toàn (ưu tiên Video+Audio, tự động fallback sang Audio nếu không có webcam)
+async function acquireMediaStream() {
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch (videoErr) {
+        console.warn('Không thể truy cập camera, thử chế độ âm thanh (Micro):', videoErr);
+        try {
+            const audioStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            showToast('Đang kết nối chế độ thoại âm thanh (Thiết bị không có Webcam)', 'info');
+            return audioStream;
+        } catch (audioErr) {
+            throw videoErr;
+        }
+    }
+}
+
+async function startVideoCall() {
+    if (!socket || !socket.connected) {
+        showToast('Chưa kết nối tới máy chủ thời gian thực để gọi video!', 'warning');
+        return;
+    }
+
+    if (!hasOpponentJoined()) {
+        showToast('Đang chờ đối thủ tham gia phòng trước khi bắt đầu Video Call!', 'warning');
+        return;
+    }
+
+    try {
+        pendingIceCandidates = [];
+        localStream = await acquireMediaStream();
         const localVideo = document.getElementById('local-video');
         if (localVideo) localVideo.srcObject = localStream;
 
-        document.getElementById('start-call-btn').style.display = 'none';
-        document.getElementById('video-controls-bar').style.display = 'flex';
+        const startBtn = document.getElementById('start-call-btn');
+        if (startBtn) startBtn.style.display = 'none';
+        const ctrlBar = document.getElementById('video-controls-bar');
+        if (ctrlBar) ctrlBar.style.display = 'flex';
 
         createPeerConnection();
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
@@ -1126,7 +1193,7 @@ function createPeerConnection() {
     peerConnection = new RTCPeerConnection(rtcConfig);
 
     peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
+        if (event.candidate && socket && socket.connected) {
             socket.emit('videoSignal', {
                 roomCode,
                 signal: { type: 'candidate', candidate: event.candidate }
@@ -1138,6 +1205,7 @@ function createPeerConnection() {
         const remoteVideo = document.getElementById('remote-video');
         if (remoteVideo && event.streams[0]) {
             remoteVideo.srcObject = event.streams[0];
+            showToast('Đã nhận luồng hình ảnh của đối thủ!', 'success');
         }
     };
 }
@@ -1145,15 +1213,23 @@ function createPeerConnection() {
 async function handleVideoSignal(signal) {
     try {
         if (signal.type === 'offer') {
+            // Tự động chuyển người nhận sang tab Video Call
+            switchToVideoTab();
+            if (typeof ChessAudio !== 'undefined' && ChessAudio.playNotify) {
+                ChessAudio.playNotify();
+            }
+
             if (!localStream) {
                 try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localStream = await acquireMediaStream();
                     const localVideo = document.getElementById('local-video');
                     if (localVideo) localVideo.srcObject = localStream;
-                    document.getElementById('start-call-btn').style.display = 'none';
-                    document.getElementById('video-controls-bar').style.display = 'flex';
+                    const startBtn = document.getElementById('start-call-btn');
+                    if (startBtn) startBtn.style.display = 'none';
+                    const ctrlBar = document.getElementById('video-controls-bar');
+                    if (ctrlBar) ctrlBar.style.display = 'flex';
                 } catch (e) {
-                    showToast('Đối thủ đang gọi nhưng bạn chưa cấp quyền camera/micro', 'warning');
+                    showToast('Đối thủ đang gọi video nhưng bạn chưa cấp quyền camera/micro', 'warning');
                     return;
                 }
             }
@@ -1162,22 +1238,52 @@ async function handleVideoSignal(signal) {
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+
+            // Xử lý các ICE candidate đã tích lũy trong hàng đợi
+            while (pendingIceCandidates.length > 0) {
+                const cand = pendingIceCandidates.shift();
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(cand));
+                } catch (candErr) {
+                    console.warn('[WebRTC] flush candidate error:', candErr);
+                }
+            }
+
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
 
-            socket.emit('videoSignal', {
-                roomCode,
-                signal: { type: 'answer', sdp: answer }
-            });
+            if (socket && socket.connected) {
+                socket.emit('videoSignal', {
+                    roomCode,
+                    signal: { type: 'answer', sdp: answer }
+                });
+            }
             showToast('Đã kết nối cuộc gọi video!', 'success');
         } else if (signal.type === 'answer') {
             if (peerConnection) {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+
+                // Xử lý các ICE candidate đã tích lũy trong hàng đợi
+                while (pendingIceCandidates.length > 0) {
+                    const cand = pendingIceCandidates.shift();
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(cand));
+                    } catch (candErr) {
+                        console.warn('[WebRTC] flush candidate error:', candErr);
+                    }
+                }
+
                 showToast('Đối thủ đã trả lời cuộc gọi!', 'success');
             }
         } else if (signal.type === 'candidate') {
-            if (peerConnection && signal.candidate) {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            if (peerConnection && peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                } catch (iceErr) {
+                    console.warn('[WebRTC] addIceCandidate error:', iceErr);
+                }
+            } else {
+                pendingIceCandidates.push(signal.candidate);
             }
         } else if (signal.type === 'end-call') {
             endVideoCall(false);
@@ -1261,29 +1367,23 @@ function attachUIEvents() {
     const copyLinkBtn = document.getElementById('copy-room-link-btn');
     if (copyLinkBtn) {
         copyLinkBtn.addEventListener('click', async () => {
-            const currentOrigin = window.location.origin;
-            let shareUrl = `${currentOrigin}/pages/game.html?room=${roomCode}&join=1`;
+            let shareUrl = `${window.location.origin}/pages/game.html?room=${roomCode}&join=1`;
 
-            // Lấy thông tin IP mạng LAN nếu muốn mời bạn bè kết nối qua điện thoại / Wi-Fi
-            let lanUrl = shareUrl;
+            // Lấy thông tin IP mạng LAN (cổng 3000) để thiết bị 2 (điện thoại/máy tính khác cùng Wi-Fi) kết nối trực tiếp
             try {
                 const res = await fetch('/api/server-info');
                 if (res.ok) {
                     const info = await res.json();
                     if (info.ip && info.ip !== '127.0.0.1') {
-                        const portStr = window.location.port ? `:${window.location.port}` : '';
-                        lanUrl = `${window.location.protocol}//${info.ip}${portStr}/pages/game.html?room=${roomCode}&join=1`;
+                        shareUrl = `http://${info.ip}:3000/pages/game.html?room=${roomCode}&join=1`;
                     }
                 }
             } catch (e) {}
 
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const linkToCopy = isLocal ? shareUrl : lanUrl;
-
-            navigator.clipboard.writeText(linkToCopy).then(() => {
-                showToast(`Đã sao chép link mời bạn bè! Hãy gửi link này để bạn cùng chơi: ${linkToCopy}`, 'success');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast(`Đã sao chép link mời bạn bè (thiết bị 2): ${shareUrl}`, 'success');
             }).catch(() => {
-                prompt('Sao chép đường dẫn này gửi cho bạn bè:', linkToCopy);
+                prompt('Sao chép đường dẫn này gửi cho bạn bè:', shareUrl);
             });
         });
     }

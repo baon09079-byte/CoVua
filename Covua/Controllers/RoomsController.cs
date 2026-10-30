@@ -106,13 +106,41 @@ namespace Covua.Controllers
 
                 if (room.Status == "finished")
                 {
-                    return BadRequest(new { message = "Phòng chơi này đã kết thúc" });
+                    // Tự động mở lại phòng nếu chủ phòng hoặc người chơi muốn vào chơi bằng mã phòng
+                    room.Status = "playing";
+                    await _context.SaveChangesAsync();
                 }
 
-                var game = await _context.Games.FirstOrDefaultAsync(g => g.RoomId == room.Id && g.Status == "playing");
+                var game = await _context.Games.FirstOrDefaultAsync(g => g.RoomId == room.Id && (g.Status == "playing" || g.Status == "waiting"));
                 if (game == null)
                 {
-                    return NotFound(new { message = "Không tìm thấy ván cờ hợp lệ" });
+                    // Tìm ván cờ gần nhất của phòng
+                    game = await _context.Games.Where(g => g.RoomId == room.Id).OrderByDescending(g => g.Id).FirstOrDefaultAsync();
+                    if (game != null && (game.MoveHistory == "[]" || string.IsNullOrEmpty(game.MoveHistory) || game.Status == "finished"))
+                    {
+                        game.Status = "waiting";
+                        game.Result = "none";
+                        game.CurrentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+                        game.MoveHistory = "[]";
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        // Tự động tạo ván cờ mặc định mới
+                        game = new Covua.Models.Game
+                        {
+                            RoomId = room.Id,
+                            WhitePlayerId = room.HostUserId,
+                            BlackPlayerId = null,
+                            CurrentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                            MoveHistory = "[]",
+                            Status = "waiting",
+                            Result = "none",
+                            StartedAt = DateTime.Now
+                        };
+                        _context.Games.Add(game);
+                        await _context.SaveChangesAsync();
+                    }
                 }
 
                 string color;
@@ -124,17 +152,26 @@ namespace Covua.Controllers
                 {
                     color = "black";
                 }
-                else if (game.BlackPlayerId == null || game.MoveHistory == "[]" || string.IsNullOrEmpty(game.MoveHistory))
+                else if (game.BlackPlayerId == null || game.MoveHistory == "[]" || string.IsNullOrEmpty(game.MoveHistory) || game.Status == "finished")
                 {
-                    // Tham gia với vai trò Quân Đen (hoặc thế chỗ nếu ván đấu chưa có nước đi nào)
+                    // Tham gia với vai trò Quân Đen
                     game.BlackPlayerId = dto.UserId;
+                    game.Status = "playing";
                     room.Status = "playing";
                     await _context.SaveChangesAsync();
                     color = "black";
                 }
                 else
                 {
-                    return BadRequest(new { message = "Phòng đã đủ 2 người chơi chính thức!" });
+                    // Khởi động lại trận mới cho đối thủ mới vào
+                    game.BlackPlayerId = dto.UserId;
+                    game.CurrentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+                    game.MoveHistory = "[]";
+                    game.Status = "playing";
+                    game.Result = "none";
+                    room.Status = "playing";
+                    await _context.SaveChangesAsync();
+                    color = "black";
                 }
 
                 return Ok(new

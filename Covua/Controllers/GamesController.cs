@@ -142,9 +142,9 @@ namespace Covua.Controllers
                     return NotFound(new { message = "Không tìm thấy ván cờ" });
                 }
 
-                var whiteUser = await _context.Users.FindAsync(game.WhitePlayerId);
-                var blackUser = game.BlackPlayerId.HasValue ? await _context.Users.FindAsync(game.BlackPlayerId.Value) : null;
-                var room = await _context.Rooms.FindAsync(game.RoomId);
+                var whiteUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == game.WhitePlayerId);
+                var blackUser = game.BlackPlayerId.HasValue ? await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == game.BlackPlayerId.Value) : null;
+                var room = await _context.Rooms.AsNoTracking().FirstOrDefaultAsync(r => r.Id == game.RoomId);
 
                 string whiteName = whiteUser?.Username ?? (game.WhitePlayerId > 10000 ? $"Khách_{game.WhitePlayerId}" : "Quân Trắng");
                 string blackName = blackUser?.Username ?? (game.BlackPlayerId.HasValue && game.BlackPlayerId.Value > 10000 ? $"Khách_{game.BlackPlayerId.Value}" : "Quân Đen");

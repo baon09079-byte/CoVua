@@ -140,4 +140,5 @@ C:\Users\baon0\source\repos\Covua\Covua\bin\Debug\net8.0\BCrypt-Net-Next.dll
 C:\Users\baon0\source\repos\Covua\Covua\bin\Debug\net8.0\Microsoft.Bcl.Cryptography.dll
 C:\Users\baon0\source\repos\Covua\Covua\bin\Debug\net8.0\System.Formats.Asn1.dll
 C:\Users\baon0\source\repos\Covua\Covua\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.InMemory.dll
+C:\Users\baon0\source\repos\Covua\Covua\obj\Debug\net8.0\Covua.sourcelink.json
 C:\Users\baon0\source\repos\Covua\Covua\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

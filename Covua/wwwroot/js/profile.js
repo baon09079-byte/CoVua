@@ -347,7 +347,7 @@ async function openReviewModal(gameId) {
         }
 
         // 2. Dự phòng lấy từ cache lịch sử đấu
-        if (!gameData && loadedGamesCache[gameId]) {
+        if (!gameData && loadedGamesCache && loadedGamesCache[gameId]) {
             gameData = loadedGamesCache[gameId];
         }
 
@@ -357,53 +357,78 @@ async function openReviewModal(gameId) {
         }
 
         reviewGameData = gameData;
+        let moves = [];
         const rawHistory = gameData.move_history;
         if (Array.isArray(rawHistory)) {
-            reviewHistoryList = rawHistory;
+            moves = rawHistory;
         } else if (typeof rawHistory === 'string') {
             try {
-                reviewHistoryList = JSON.parse(rawHistory);
+                moves = JSON.parse(rawHistory || '[]');
             } catch (e) {
-                reviewHistoryList = [];
+                moves = [];
             }
         } else {
-            reviewHistoryList = [];
+            moves = [];
         }
+        reviewHistoryList = moves;
         reviewMoveIndex = 0;
 
         // Cập nhật tiêu đề ván đấu
         const whiteNameEl = document.getElementById('review-white-name');
         const blackNameEl = document.getElementById('review-black-name');
-        if (whiteNameEl) whiteNameEl.textContent = reviewGameData.white_player_name || 'Quân Trắng';
-        if (blackNameEl) blackNameEl.textContent = reviewGameData.black_player_name || 'Quân Đen';
+        if (whiteNameEl) whiteNameEl.textContent = reviewGameData.white_player_name || reviewGameData.white_username || 'Quân Trắng';
+        if (blackNameEl) blackNameEl.textContent = reviewGameData.black_player_name || reviewGameData.black_username || 'Quân Đen';
 
-        // Đặt lại bàn cờ về ban đầu và điều chỉnh góc nhìn theo vai trò
-        if (reviewChess && reviewBoard) {
-            const isUserBlack = (currentUser && Number(currentUser.id) === Number(reviewGameData.black_player_id));
-            reviewBoard.setOrientation(isUserBlack ? 'black' : 'white');
-            reviewChess.reset();
-            reviewBoard.setPosition(reviewChess.fen());
-            if (typeof reviewBoard.clearHighlights === 'function') {
-                reviewBoard.clearHighlights();
-            } else {
-                if (reviewBoard.clearSelection) reviewBoard.clearSelection();
-                if (reviewBoard.clearCheck) reviewBoard.clearCheck();
+        // Đảm bảo bàn cờ được khởi tạo nếu chưa có
+        if (!reviewChess && typeof Chess !== 'undefined') {
+            reviewChess = new Chess();
+        }
+        if (!reviewBoard && typeof ChessboardUI !== 'undefined') {
+            const mount = document.getElementById('review-board-mount');
+            if (mount) {
+                reviewBoard = new ChessboardUI('#review-board-mount', {
+                    draggable: false,
+                    clickable: false
+                });
             }
         }
 
-        // Khởi tạo slider
-        const slider = document.getElementById('review-timeline-slider');
-        const curLabel = document.getElementById('review-slider-current');
-        const maxLabel = document.getElementById('review-slider-max');
-        if (slider) {
-            slider.max = reviewHistoryList.length;
-            slider.value = 0;
+        // Đặt lại bàn cờ về ban đầu và điều chỉnh góc nhìn theo vai trò
+        try {
+            if (reviewChess) {
+                reviewChess.reset();
+            }
+            if (reviewBoard) {
+                const isUserBlack = (currentUser && Number(currentUser.id) === Number(reviewGameData.black_player_id));
+                reviewBoard.setOrientation(isUserBlack ? 'black' : 'white');
+                const startFen = reviewChess ? reviewChess.fen() : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+                reviewBoard.setPosition(startFen);
+                if (typeof reviewBoard.clearHighlights === 'function') {
+                    reviewBoard.clearHighlights();
+                } else {
+                    if (reviewBoard.clearSelection) reviewBoard.clearSelection();
+                    if (reviewBoard.clearCheck) reviewBoard.clearCheck();
+                }
+            }
+        } catch (bErr) {
+            console.warn('[Review] Error resetting board:', bErr);
         }
-        if (curLabel) curLabel.textContent = '0';
-        if (maxLabel) maxLabel.textContent = reviewHistoryList.length.toString();
 
-        updateReviewMoveText();
-        renderReviewMoveList();
+        // Khởi tạo slider
+        try {
+            const slider = document.getElementById('review-timeline-slider');
+            const curLabel = document.getElementById('review-slider-current');
+            const maxLabel = document.getElementById('review-slider-max');
+            if (slider) {
+                slider.max = reviewHistoryList.length;
+                slider.value = 0;
+            }
+            if (curLabel) curLabel.textContent = '0';
+            if (maxLabel) maxLabel.textContent = reviewHistoryList.length.toString();
+        } catch (sErr) {}
+
+        try { updateReviewMoveText(); } catch (e) {}
+        try { renderReviewMoveList(); } catch (e) {}
 
         if (modal) {
             modal.classList.add('active');
